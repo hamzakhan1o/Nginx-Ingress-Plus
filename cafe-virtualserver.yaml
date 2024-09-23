@@ -1,0 +1,51 @@
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: cafe-vs
+spec:
+  host: cafe.example.com
+  upstreams:
+  - name: tea
+    service: tea-svc
+    port: 80
+    lb-method: round_robin
+    slow-start: 20s
+    healthCheck:
+      enable: true
+      path: /tea
+      interval: 20s
+      jitter: 3s
+      fails: 5
+      passes: 2
+      connect-timeout: 30s
+      read-timeout: 20s
+  - name: coffee
+    service: coffee-svc
+    port: 80
+    lb-method: round_robin
+    healthCheck:
+      enable: true
+      path: /coffee
+      interval: 10s
+      jitter: 3s
+      fails: 3
+      passes: 2
+      connect-timeout: 30s
+      read-timeout: 20s
+  routes:
+  - path: /
+    action:
+      pass: coffee
+  - path: /tea
+    action:
+      pass: tea
+  - path: /coffee
+    action:
+      pass: coffee
+  - path: /milk
+    action:
+      return:
+        code: 200
+        type: text/html
+        body: "Welcome to NGINX Plus NIC Workshop!!"
+
